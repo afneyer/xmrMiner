@@ -77,3 +77,11 @@ config-debug.txt
 /.vs/cpu-mining/v15/Browse.VC.opendb
 /.vs/cpu-mining/v15/Browse.VC.db
 /.vs/cpu-mining/v15/.suo
+/.vs/cpu-mining/v15/ipch/AutoPCH/fc938f5c61148674/SOFT_AES.ipch
+/.vs/cpu-mining/v15/ipch/AutoPCH/f8ea884704d1f59b/CLI-MINER.ipch
+/.vs/cpu-mining/v15/ipch/AutoPCH/dd71dc520f3184da/EXECUTOR.ipch
+/.vs/cpu-mining/v15/ipch/AutoPCH/c4ff6463f4a5daa/CONSOLE.ipch
+/.vs/cpu-mining/v15/ipch/AutoPCH/90a4eb1691e60e0a/MINETHD.ipch
+/.vs/cpu-mining/v15/ipch/AutoPCH/5eb53b3a58137773/JCONF.ipch
+/.vs/cpu-mining/v15/ipch/AutoPCH/4e3241ae1f5df62c/AUTOADJUST.ipch
+/out.log
