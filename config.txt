@@ -20,12 +20,15 @@
  * [ 
  *      { "low_power_mode" : false, "no_prefetch" : true, "affine_to_cpu" : 0 },
  *      { "low_power_mode" : false, "no_prefetch" : true, "affine_to_cpu" : 1 },
+ *      { "low_power_mode" : false, "no_prefetch" : true, "affine_to_cpu" : 2 },
+ *		{ "low_power_mode" : false, "no_prefetch" : true, "affine_to_cpu" : 3 }
  * ],
  */
 "cpu_threads_conf" : 
 [ 
      { "low_power_mode" : false, "no_prefetch" : true, "affine_to_cpu" : 0 },
-     { "low_power_mode" : false, "no_prefetch" : true, "affine_to_cpu" : 1 },
+	 { "low_power_mode" : false, "no_prefetch" : true, "affine_to_cpu" : 1 },
+	 { "low_power_mode" : false, "no_prefetch" : true, "affine_to_cpu" : 2 }
 ],
 
 /*
@@ -109,9 +112,22 @@
  *
  * We feature pools up to 1MH/s. For a more complete list see M5M400's pool list at www.moneropools.com
  */
-"pool_address" : "stratum+tcp://xmr.pool.minergate.com:45560",
-"wallet_address" : "afneyer@gmail.com",
-"pool_password" : "",
+
+"pool_address" : "stratum+tcp://mine.xmrpool.net:3335",
+"wallet_address" : "42KTitMEkWR8hCxt16y2PygZYZoa3DS8vVeZPNmiKzezEqSiLyvu2ahWbwaVe4vUMveKAzAiA4j8xgUi29TpKXpm41uLnRW",
+"pool_password" : "worker",
+
+/*
+ * "pool_address" : "stratum+tcp://xmr.pool.minergate.com:45560",
+ * "wallet_address" : "afneyer@gmail.com",
+ * "pool_password" : "",
+*/
+
+/*
+ * "pool_address" : "stratum+tcp://xmr-us-west1.nanopool.org:14444",
+ * "wallet_address" : "afneyer@gmail.com",
+ * "pool_password" : "3903",
+ */
 
 /*
  * Network timeouts.
@@ -127,7 +143,7 @@
  * giveup_limit - Limit how many times we try to reconnect to the pool. Zero means no limit. Note that stak miners
  *                don't mine while the connection is lost, so your computer's power usage goes down to idle.
  */
-"call_timeout" : 10,
+"call_timeout" : 20,
 "retry_time" : 10,
 "giveup_limit" : 0,
 
