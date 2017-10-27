@@ -13,6 +13,7 @@ config-debug.txt
 
 # merge original backup files
 *.orig
+/x64
 /Debug/console.obj
 /Debug/jpsock.obj
 /Debug/jconf.obj
