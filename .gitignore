@@ -86,3 +86,4 @@ config-debug.txt
 /.vs/cpu-mining/v15/ipch/AutoPCH/5eb53b3a58137773/JCONF.ipch
 /.vs/cpu-mining/v15/ipch/AutoPCH/4e3241ae1f5df62c/AUTOADJUST.ipch
 /out.log
+/.vs/cpu-mining/v15/ipch/AutoPCH/36ed01cd0b87c1cb/JPSOCK.ipch
