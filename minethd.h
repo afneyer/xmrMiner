@@ -119,7 +119,11 @@ private:
 
 	void work_main();
 	void double_work_main();
+	
 	void consume_work();
+	void get_nonce(int i);
+	void save_nonce(int i);
+	void sort_nonces();
 
 	static std::atomic<uint64_t> iGlobalJobNo;
 	static std::atomic<uint64_t> iConsumeCnt;

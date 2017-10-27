@@ -383,6 +383,8 @@ void minethd::work_main()
 	uint64_t* piHashVal;
 	uint32_t* piNonce;
 	job_result result;
+	uint64_t startNonce;
+	uint64_t kCount = 0;
 
 	hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch);
 	ctx = minethd_alloc_ctx();
@@ -411,6 +413,10 @@ void minethd::work_main()
 		else
 			result.iNonce = calc_start_nonce(oWork.iResumeCnt);
 
+		startNonce = result.iNonce;
+		kCount = 0;
+		
+
 		assert(sizeof(job_result::sJobID) == sizeof(pool_job::sJobID));
 		memcpy(result.sJobID, oWork.sJobID, sizeof(job_result::sJobID));
 
@@ -425,13 +431,25 @@ void minethd::work_main()
 			}
 			iCount++;
 
-			*piNonce = ++result.iNonce;
+			// printer::inst()->print_msg(L4, "Result.iNonce  = %i", result.iNonce);
+			result.iNonce = result.iNonce + 1;
+			*piNonce = result.iNonce;
+			kCount++;
+			// *piNonce = ++result.iNonce;
+			// printer::inst()->print_msg(L4, "piNonce        = %i", *piNonce);
 
 			hash_fun(oWork.bWorkBlob, oWork.iWorkSize, result.bResult, ctx);
 
-			if (*piHashVal < oWork.iTarget)
+			if (*piHashVal < oWork.iTarget) {
 				executor::inst()->push_event(ex_event(result, oWork.iPoolId));
-
+				printer::inst()->print_msg(L4, "good nonce = %i", *piNonce );
+				printer::inst()->print_msg(L4, "iCount     = %i", iCount);
+				printer::inst()->print_msg(L4, "net count  = %i", *piNonce - startNonce);
+				printer::inst()->print_msg(L4, "Version 001");
+			}
+			else {
+				// printer::inst()->print_msg(L4, "Bad  = %i", *piNonce );
+			}
 			std::this_thread::yield();
 		}
 
@@ -549,3 +567,25 @@ void minethd::double_work_main()
 	cryptonight_free_ctx(ctx0);
 	cryptonight_free_ctx(ctx1);
 }
+
+/*
+* gets the next nonce to try
+*/
+void minethd::get_nonce( int i )
+{
+}
+
+/*
+* saves the last nonce in table
+*/
+void minethd::save_nonce(int i)
+{
+}
+
+/*
+* sort nonce lists
+*/
+void minethd::sort_nonces()
+{
+}
+
