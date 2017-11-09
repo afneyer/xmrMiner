@@ -28,6 +28,8 @@
 #include <thread>
 #include <bitset>
 #include "console.h"
+#include <fstream>
+#include "stats.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -296,6 +298,9 @@ std::vector<minethd*>* minethd::thread_starter(miner_work& pWork)
 	iConsumeCnt = 0;
 	std::vector<minethd*>* pvThreads = new std::vector<minethd*>;
 
+
+
+
 	//Launch the requested number of single and double threads, to distribute
 	//load evenly we need to alternate single and double threads
 	size_t i, n = jconf::inst()->GetThreadCount();
@@ -384,7 +389,11 @@ void minethd::work_main()
 	uint32_t* piNonce;
 	job_result result;
 	uint64_t startNonce;
-	uint64_t kCount = 0;
+	int kCnt = 0;
+	int kNum = 0;
+	int lastNonce = 0;
+
+	
 
 	hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch);
 	ctx = minethd_alloc_ctx();
@@ -392,6 +401,9 @@ void minethd::work_main()
 	piHashVal = (uint64_t*)(result.bResult + 24);
 	piNonce = (uint32_t*)(oWork.bWorkBlob + 39);
 	iConsumeCnt++;
+	lastNonce = 0;
+
+
 
 	while (bQuit == 0)
 	{
@@ -414,9 +426,8 @@ void minethd::work_main()
 			result.iNonce = calc_start_nonce(oWork.iResumeCnt);
 
 		startNonce = result.iNonce;
-		kCount = 0;
-		
-
+		kCnt = 0;
+	
 		assert(sizeof(job_result::sJobID) == sizeof(pool_job::sJobID));
 		memcpy(result.sJobID, oWork.sJobID, sizeof(job_result::sJobID));
 
@@ -430,29 +441,50 @@ void minethd::work_main()
 				iTimestamp.store(iStamp, std::memory_order_relaxed);
 			}
 			iCount++;
+			
 
-			// printer::inst()->print_msg(L4, "Result.iNonce  = %i", result.iNonce);
-			result.iNonce = result.iNonce + 1;
+			// result.iNonce = result.iNonce + 1;
+			int nonceDiff = stats::getNonce(kCnt);
+			result.iNonce = startNonce + lastNonce + nonceDiff;
 			*piNonce = result.iNonce;
-			kCount++;
-			// *piNonce = ++result.iNonce;
-			// printer::inst()->print_msg(L4, "piNonce        = %i", *piNonce);
+
+			// printer::inst()->print_msg(L4, "total Hashes=%i,   kCount=%i,   kNum=%i,   startNonce=%i,   lastNonce=%i,   nonceDiff =%i,   newNonce=%i", iCount, kCnt, kNum, startNonce, lastNonce, nonceDiff, *piNonce);
+
+			kCnt++;
 
 			hash_fun(oWork.bWorkBlob, oWork.iWorkSize, result.bResult, ctx);
 
 			if (*piHashVal < oWork.iTarget) {
 				executor::inst()->push_event(ex_event(result, oWork.iPoolId));
+
+
 				printer::inst()->print_msg(L4, "good nonce = %i", *piNonce );
+				printer::inst()->print_msg(L4, "good count = %i", kNum);
 				printer::inst()->print_msg(L4, "iCount     = %i", iCount);
+				printer::inst()->print_msg(L4, "kCount     = %i", kCnt);
+				
 				printer::inst()->print_msg(L4, "net count  = %i", *piNonce - startNonce);
-				printer::inst()->print_msg(L4, "Version 001");
-			}
-			else {
+				printer::inst()->print_msg(L4, "Version 012");
+
+				lastNonce = *piNonce;
+
+				kNum++;
+				stats::addtoKList(kCnt);
+				kCnt = 0;
+
+				// TODO store kvalues in file every x values
+				if (kNum % 10 == 0) {
+					stats::writeKValuesToFile();
+				}
+				
+			} else {
 				// printer::inst()->print_msg(L4, "Bad  = %i", *piNonce );
 			}
 			std::this_thread::yield();
 		}
 
+		lastNonce = 0;
+		printer::inst()->print_msg(L4, "Resetting lastNonce = 0");
 		consume_work();
 	}
 
@@ -494,6 +526,12 @@ void minethd::double_work_main()
 	uint8_t bDoubleHashOut[64];
 	uint8_t	bDoubleWorkBlob[sizeof(miner_work::bWorkBlob) * 2];
 	uint32_t iNonce;
+	uint32_t iNonce0;
+	uint32_t iNonce1;
+	uint32_t startNonce;
+	uint32_t lastNonce;
+	uint32_t kCnt;
+	uint32_t kNum = 0;
 	job_result res;
 
 	hash_fun = func_dbl_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch);
@@ -506,6 +544,9 @@ void minethd::double_work_main()
 	piNonce1 = nullptr;
 
 	iConsumeCnt++;
+
+	// read kValues from file
+	stats::readAndBuildStats();
 
 	while (bQuit == 0)
 	{
@@ -530,6 +571,10 @@ void minethd::double_work_main()
 		else
 			iNonce = calc_start_nonce(oWork.iResumeCnt);
 
+		startNonce = iNonce;
+		lastNonce = startNonce;
+		kCnt = 0;
+
 		assert(sizeof(job_result::sJobID) == sizeof(pool_job::sJobID));
 
 		while (iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
@@ -544,16 +589,48 @@ void minethd::double_work_main()
 
 			iCount += 2;
 
-			*piNonce0 = ++iNonce;
-			*piNonce1 = ++iNonce;
+			int nonceDiff0 = stats::getNonce(kCnt);
+			*piNonce0 = startNonce + nonceDiff0;
+			iNonce0 = *piNonce0;
+			kCnt++;
+			// printer::inst()->print_msg(L4, "total Hashes=%i,   kCount=%i,   startNonce=%i,   lastNonce=%i,   nonceDiff0 =%i,   newNonce=%i", iCount, kCnt, startNonce, lastNonce, nonceDiff0, iNonce0);
+
+
+			int nonceDiff1 = stats::getNonce(kCnt);
+			*piNonce1 = startNonce + nonceDiff1;
+			iNonce1 = *piNonce1;
+			kCnt++;
+			// printer::inst()->print_msg(L4, "total Hashes=%i,   kCount=%i,   startNonce=%i,   lastNonce=%i,   nonceDiff0 =%i,   newNonce=%i", iCount, kCnt, startNonce, lastNonce, nonceDiff1, iNonce1);
+
+			// *piNonce0 = ++iNonce;
+			// *piNonce1 = ++iNonce;
 
 			hash_fun(bDoubleWorkBlob, oWork.iWorkSize, bDoubleHashOut, ctx0, ctx1);
 
-			if (*piHashVal0 < oWork.iTarget)
-				executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce-1, bDoubleHashOut), oWork.iPoolId));
+			if (*piHashVal0 < oWork.iTarget) {
+				executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce0, bDoubleHashOut), oWork.iPoolId));
+				printer::inst()->print_msg(L4, "start nonce      0 = %i", startNonce);
+				printer::inst()->print_msg(L4, "last nonce       0 = %i", lastNonce);
+				printer::inst()->print_msg(L4, "good nonce       0 = %i", iNonce0);
+				printer::inst()->print_msg(L4, "startNonce diff  0 = %i", iNonce0 - startNonce);
+				printer::inst()->print_msg(L4, "lastNonce diff   0 = %i", nonceDiff0);
+				printer::inst()->print_msg(L4, "good nonce count 0 = %i", ++kNum);
 
-			if (*piHashVal1 < oWork.iTarget)
-				executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce, bDoubleHashOut + 32), oWork.iPoolId));
+				stats::addtoKList(iNonce0 - startNonce);
+				lastNonce = iNonce0;
+			}
+
+			if (*piHashVal1 < oWork.iTarget) {
+				executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce1, bDoubleHashOut + 32), oWork.iPoolId));
+				printer::inst()->print_msg(L4, "start nonce      1 = %i", startNonce);
+				printer::inst()->print_msg(L4, "last nonce       1 = %i", lastNonce);
+				printer::inst()->print_msg(L4, "good nonce       1 = %i", iNonce1);
+				printer::inst()->print_msg(L4, "startNonce diff  1 = %i", iNonce1 - startNonce);
+				printer::inst()->print_msg(L4, "lastNonce diff   1 = %i", nonceDiff1);
+				printer::inst()->print_msg(L4, "good nonce count 1 = %i", ++kNum);
+				stats::addtoKList(iNonce1 - startNonce);
+				lastNonce = iNonce1;
+			}
 
 			std::this_thread::yield();
 		}

@@ -27,8 +27,6 @@
 "cpu_threads_conf" : 
 [ 
      { "low_power_mode" : false, "no_prefetch" : true, "affine_to_cpu" : 0 },
-	 { "low_power_mode" : false, "no_prefetch" : true, "affine_to_cpu" : 1 },
-	 { "low_power_mode" : false, "no_prefetch" : true, "affine_to_cpu" : 2 }
 ],
 
 /*
@@ -113,8 +111,24 @@
  * We feature pools up to 1MH/s. For a more complete list see M5M400's pool list at www.moneropools.com
  */
 
+/*
+* "pool_address" : "ca01.supportxmr.com:3333",
+* "wallet_address" : "42KTitMEkWR8hCxt16y2PygZYZoa3DS8vVeZPNmiKzezEqSiLyvu2ahWbwaVe4vUMveKAzAiA4j8xgUi29TpKXpm41uLnRW+512",
+* "pool_password" : "worker",
+*/
+
+/* With fixed difficulty pool reports new block rarely, nonces keep increasing
+* "pool_address" : "stratum+tcp://monerol.com:3333",
+* "wallet_address" : "42KTitMEkWR8hCxt16y2PygZYZoa3DS8vVeZPNmiKzezEqSiLyvu2ahWbwaVe4vUMveKAzAiA4j8xgUi29TpKXpm41uLnRW",
+* "pool_password" : "x",
+*/
+
+/* 
+* This pool does not allow fixed difficulty, can specify start difficulty, but pool adjusts it anyway
+*/
+
 "pool_address" : "stratum+tcp://mine.xmrpool.net:3335",
-"wallet_address" : "42KTitMEkWR8hCxt16y2PygZYZoa3DS8vVeZPNmiKzezEqSiLyvu2ahWbwaVe4vUMveKAzAiA4j8xgUi29TpKXpm41uLnRW",
+"wallet_address" : "42KTitMEkWR8hCxt16y2PygZYZoa3DS8vVeZPNmiKzezEqSiLyvu2ahWbwaVe4vUMveKAzAiA4j8xgUi29TpKXpm41uLnRW+1000",
 "pool_password" : "worker",
 
 /*
@@ -128,6 +142,17 @@
  * "wallet_address" : "afneyer@gmail.com",
  * "pool_password" : "3903",
  */
+ 
+/* 
+*This one does not seem to work at all 
+*/
+/*
+* "pool_address" : "us-stratum.viaxmr.com:8443",
+* "wallet_address" : "42KTitMEkWR8hCxt16y2PygZYZoa3DS8vVeZPNmiKzezEqSiLyvu2ahWbwaVe4vUMveKAzAiA4j8xgUi29TpKXpm41uLnRW+1000",
+* "pool_password" : "worker",
+*/
+
+
 
 /*
  * Network timeouts.

@@ -143,7 +143,7 @@
 - execute the following commands (NOTE: path to VS2017 can be different)
   ```
   "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsMSBuildCmd.bat"
-  set CMAKE_PREFIX_PATH=C:\xmr-stak-dep\hwloc-win64-build-1.11.7;C:\xmr-stak-dep\libmicrohttpd-0.9.55-w32-bin\x86_64\VS2017\Release-static
+  set CMAKE_PREFIX_PATH=C:\afnde\xmr-stak-dep\hwloc-win64-build-1.11.7;C:\xmr-stak-dep\libmicrohttpd-0.9.55-w32-bin\x86_64\VS2017\Release-static
   mkdir build
   cd build
   cmake -G "Visual Studio 15 2017 Win64" -T v141,host=x64 ..

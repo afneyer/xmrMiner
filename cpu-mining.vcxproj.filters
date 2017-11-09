@@ -63,6 +63,9 @@
     <ClCompile Include="crypto\soft_aes.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="stats.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="xmr-stak-dep\hwloc-win64-build-1.11.7\lib\libhwloc.def">
@@ -77,9 +80,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="executor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Header.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="httpd.h">
@@ -407,6 +407,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="xmr-stak-dep\libmicrohttpd-0.9.55-w32-bin\x86_64\vs2017\release-static\microhttpd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stats.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
