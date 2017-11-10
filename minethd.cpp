@@ -294,6 +294,7 @@ bool minethd::self_test()
 
 std::vector<minethd*>* minethd::thread_starter(miner_work& pWork)
 {
+	stats::readAndBuildStats();
 	iGlobalJobNo = 0;
 	iConsumeCnt = 0;
 	std::vector<minethd*>* pvThreads = new std::vector<minethd*>;
@@ -546,7 +547,7 @@ void minethd::double_work_main()
 	iConsumeCnt++;
 
 	// read kValues from file
-	stats::readAndBuildStats();
+	// stats::readAndBuildStats();
 
 	while (bQuit == 0)
 	{
@@ -574,6 +575,7 @@ void minethd::double_work_main()
 		startNonce = iNonce;
 		lastNonce = startNonce;
 		kCnt = 0;
+		stats::resetNonceCounter();
 
 		assert(sizeof(job_result::sJobID) == sizeof(pool_job::sJobID));
 
@@ -589,15 +591,19 @@ void minethd::double_work_main()
 
 			iCount += 2;
 
-			int nonceDiff0 = stats::getNonce(kCnt);
-			*piNonce0 = startNonce + nonceDiff0;
+			// int nonceDiff0 = stats::getNonce(kCnt);
+			int nonceDiff0 = stats::getNonce();
+			// *piNonce0 = startNonce + nonceDiff0;
+			*piNonce0 = nonceDiff0;
 			iNonce0 = *piNonce0;
 			kCnt++;
 			// printer::inst()->print_msg(L4, "total Hashes=%i,   kCount=%i,   startNonce=%i,   lastNonce=%i,   nonceDiff0 =%i,   newNonce=%i", iCount, kCnt, startNonce, lastNonce, nonceDiff0, iNonce0);
 
 
-			int nonceDiff1 = stats::getNonce(kCnt);
-			*piNonce1 = startNonce + nonceDiff1;
+			// int nonceDiff1 = stats::getNonce(kCnt);
+			int nonceDiff1 = stats::getNonce();
+			// *piNonce1 = startNonce + nonceDiff1;
+			*piNonce1 = nonceDiff1;
 			iNonce1 = *piNonce1;
 			kCnt++;
 			// printer::inst()->print_msg(L4, "total Hashes=%i,   kCount=%i,   startNonce=%i,   lastNonce=%i,   nonceDiff0 =%i,   newNonce=%i", iCount, kCnt, startNonce, lastNonce, nonceDiff1, iNonce1);
@@ -615,8 +621,10 @@ void minethd::double_work_main()
 				printer::inst()->print_msg(L4, "startNonce diff  0 = %i", iNonce0 - startNonce);
 				printer::inst()->print_msg(L4, "lastNonce diff   0 = %i", nonceDiff0);
 				printer::inst()->print_msg(L4, "good nonce count 0 = %i", ++kNum);
+				printer::inst()->print_msg(L4, "total hashes     0 = %i", iCount-1);
+				printer::inst()->print_msg(L4, "hash/nonce       0 = %i", (iCount-1)/kNum);
 
-				stats::addtoKList(iNonce0 - startNonce);
+				stats::addtoKList(iNonce0);
 				lastNonce = iNonce0;
 			}
 
@@ -628,7 +636,9 @@ void minethd::double_work_main()
 				printer::inst()->print_msg(L4, "startNonce diff  1 = %i", iNonce1 - startNonce);
 				printer::inst()->print_msg(L4, "lastNonce diff   1 = %i", nonceDiff1);
 				printer::inst()->print_msg(L4, "good nonce count 1 = %i", ++kNum);
-				stats::addtoKList(iNonce1 - startNonce);
+				printer::inst()->print_msg(L4, "total hashes     0 = %i", iCount);
+				printer::inst()->print_msg(L4, "hash/nonce       0 = %i", iCount/kNum);
+				stats::addtoKList(iNonce1);
 				lastNonce = iNonce1;
 			}
 

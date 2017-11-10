@@ -3,6 +3,7 @@
 #include <atomic>
 #include <vector>
 #include <map>
+#include <mutex>
 #include "crypto/cryptonight.h"
 
 class stats
@@ -25,14 +26,17 @@ public:
 
 	static void sortKCount();
 	static int getNonce(int i);
+	static int getNonce();
+	static void resetNonceCounter();
 	static void readAndBuildStats();
 	static void reBuildStats();
 	static void addtoKList(int k);
-
+	static std::mutex mtx;
 
 private:
 	
 	static int maxNonce;
+	static int nonceIndex;
 
 	static const int kListSize = 16384;
 	static std::vector<int> kList;

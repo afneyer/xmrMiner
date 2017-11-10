@@ -12,7 +12,9 @@ std::map<int, int> stats::kCount;
 std::multimap<int, int> stats::kCountTrans;
 std::map<int, int> stats::kSorted;
 int stats::maxNonce;
+int stats::nonceIndex;
 int stats::kListIndex = 0;
+std::mutex stats::mtx;
 
 template<typename A, typename B>
 std::pair<B, A> flip_pair(const std::pair<A, B> &p)
@@ -141,8 +143,23 @@ int stats::getNonce(int i)
 	}
 }
 
+int stats::getNonce() {
+	stats::mtx.lock();
+	int nonce = stats::getNonce(stats::nonceIndex);
+	stats::nonceIndex++;
+	stats::mtx.unlock();
+	return nonce;
+}
+
+void stats::resetNonceCounter() {
+	stats::mtx.lock();
+	nonceIndex = 0;
+	stats::mtx.unlock();
+}
+
 void stats::addtoKList(int k)
 {
+	stats::mtx.lock();
 	if (stats::kListIndex >= stats::kListSize) {
 		stats::kListIndex = 0;
 	}
@@ -160,10 +177,12 @@ void stats::addtoKList(int k)
 		stats::writeKValuesToFile();
 		stats::reBuildStats();
 	}
+	stats::mtx.unlock();
 }
 
 void stats::readAndBuildStats()
 {
+	stats::nonceIndex = 0;
 	stats::readKValuesFromFile();
 	stats::updateKCount();
 	stats::transformKCount();
