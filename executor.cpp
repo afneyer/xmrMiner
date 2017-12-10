@@ -34,6 +34,7 @@
 #include "console.h"
 #include "donate-level.h"
 #include "webdesign.h"
+#include "stats.h"
 
 #ifdef _WIN32
 #define strncasecmp _strnicmp
@@ -247,7 +248,7 @@ void executor::on_pool_have_job(size_t pool_id, pool_job& oPoolJob)
 
 	printer::inst()->print_msg(L3, "New block detected.");
 
-	// reset last nonce
+	stats::resetNonceStats();
 }
 
 void executor::on_miner_result(size_t pool_id, job_result& oResult)
