@@ -214,6 +214,7 @@ void executor::on_sock_error(size_t pool_id, std::string&& sError)
 			return;
 
 		printer::inst()->print_msg(L1, "Dev pool connection error. Switching work.");
+		stats::resetNonceStats();
 		on_switch_pool(usr_pool_id);
 		return;
 	}

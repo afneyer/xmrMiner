@@ -38,7 +38,11 @@ public:
 	static void difficultyStats(uint64_t target, uint64_t hash);
 	static void addtoNonceList(int k, int hashCount);
 	static void fillRandomMap();
+	static uint32_t getNonceFromWorkBlob(uint8_t workBlob[], bool b);
+	static uint32_t getWorkEndFromWorkBlob(uint8_t workBlob[], int numBits, bool b);
+	static void printBits(uint32_t n);
 	static std::mutex mtx;
+	static void printBytes(uint8_t workBlob[], int start, int end, std::string s);
 
 private:
 	
@@ -46,7 +50,7 @@ private:
 	static int nonceIndex;
 	static int lastNonce;
 
-	static const int nonceListSize = 65444;
+	static const int nonceListSize = 200000;
 	static std::vector<int> nonceList;
 	static int nonceListIndex;
 

@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <memory.h>
+#include <stdio.h>
 
 #define HASH_DATA_AREA 136
 #define KECCAK_ROUNDS 24
@@ -141,6 +142,25 @@ typedef uint64_t state_t[25];
 
 void keccak(const uint8_t *in, int inlen, uint8_t *md, int mdlen)
 {
+	/* FILE *f = fopen("keccak.csv", "a");
+	if (f == NULL)
+	{
+		printf("Error opening file!\n");
+		exit(1);
+	}
+
+	for (int j= 0; j < inlen; j++) {
+		int k = in[j];
+		if (j < inlen - 1) {
+			// fprintf(f, "%i,", k);
+		}
+		else {
+			// fprintf(f, "%i\n");
+		}
+	}
+	// fprintf(f,"\n");
+	*/
+
 	state_t st;
 	uint8_t temp[144];
 	int i, rsiz, rsizw;
@@ -149,6 +169,7 @@ void keccak(const uint8_t *in, int inlen, uint8_t *md, int mdlen)
 	rsizw = rsiz / 8;
 	
 	memset(st, 0, sizeof(st));
+	// fprintf(f, "size of st :", sizeof(st));
 
 	for ( ; inlen >= rsiz; inlen -= rsiz, in += rsiz) {
 		for (i = 0; i < rsizw; i++)
@@ -162,12 +183,16 @@ void keccak(const uint8_t *in, int inlen, uint8_t *md, int mdlen)
 	memset(temp + inlen, 0, rsiz - inlen);
 	temp[rsiz - 1] |= 0x80;
 
-	for (i = 0; i < rsizw; i++)
-		st[i] ^= ((uint64_t *) temp)[i];
+	for (i = 0; i < rsizw; i++) {
+		st[i] ^= ((uint64_t *)temp)[i];
+		
+	}
 
 	keccakf(st, KECCAK_ROUNDS);
 
 	memcpy(md, st, mdlen);
+
+	// fclose(f);
 }
 
 void keccak1600(const uint8_t *in, int inlen, uint8_t *md)

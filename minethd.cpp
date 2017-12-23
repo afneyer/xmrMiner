@@ -466,7 +466,7 @@ void minethd::work_main()
 
 				printer::inst()->print_msg(L4, "Version 012");
 
-				stats::addtoNonceList(kCnt,hashCount);
+				// stats::addtoNonceList(kCnt,hashCount);
 				kCnt = 0;
 				
 			} else {
@@ -513,11 +513,15 @@ void minethd::double_work_main()
 	uint64_t iCount = 0;
 	uint64_t *piHashVal0, *piHashVal1;
 	uint32_t *piNonce0, *piNonce1;
-	uint8_t bDoubleHashOut[64];
+	uint8_t bDoubleHashOut[64]; 
 	uint8_t	bDoubleWorkBlob[sizeof(miner_work::bWorkBlob) * 2];
 	uint32_t iNonce;
 	uint32_t iNonce0;
 	uint32_t iNonce1;
+	uint32_t *workEnd0;
+	uint32_t *workEnd1;
+	uint32_t *we640;
+	uint32_t *we641;
 	uint32_t startNonce;
 	int hashCount = 0;
 	job_result res;
@@ -529,6 +533,8 @@ void minethd::double_work_main()
 	piHashVal0 = (uint64_t*)(bDoubleHashOut + 24);
 	piHashVal1 = (uint64_t*)(bDoubleHashOut + 32 + 24);
 	piNonce0 = (uint32_t*)(bDoubleWorkBlob + 39);
+	workEnd0 = (uint32_t*)(bDoubleWorkBlob + 35);
+	we640 = (uint32_t*)(bDoubleWorkBlob + 31);
 	piNonce1 = nullptr;
 
 	iConsumeCnt++;
@@ -548,9 +554,12 @@ void minethd::double_work_main()
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 			consume_work();
+			printer::inst()->print_msg(L4, "oWork.iWorkSize = %i", oWork.iWorkSize);
 			memcpy(bDoubleWorkBlob, oWork.bWorkBlob, oWork.iWorkSize);
 			memcpy(bDoubleWorkBlob + oWork.iWorkSize, oWork.bWorkBlob, oWork.iWorkSize);
 			piNonce1 = (uint32_t*)(bDoubleWorkBlob + oWork.iWorkSize + 39);
+			workEnd1 = (uint32_t*)(bDoubleWorkBlob + oWork.iWorkSize + 35);
+			we641 = (uint32_t*)(bDoubleWorkBlob + oWork.iWorkSize + 35);
 			continue;
 		}
 
@@ -593,17 +602,30 @@ void minethd::double_work_main()
 			     
 			// todo printer::inst()->print_msg(L4,format.c_str(),oWork.iTarget, *piHashVal0);
 			// todo printer::inst()->print_msg(L4,format.c_str(), oWork.iTarget, *piHashVal1);
-			
-			
+			// std::string uint32 = std::string(PRIu32);
+			// format = "---workEnd0=%---" + uint32 + "  --- workEnd1=%---" + uint32;
+			// printer::inst()->print_msg(L4, format.c_str(), *workEnd0, *workEnd1);
 
 			if (*piHashVal0 < oWork.iTarget) {
 				executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce0, bDoubleHashOut), oWork.iPoolId));
 				printer::inst()->print_msg(L4, "start nonce      0 = %i", startNonce);
 				printer::inst()->print_msg(L4, "good nonce       0 = %i", iNonce0);
 				printer::inst()->print_msg(L4, "total hashes     0 = %i", iCount-1);
+				
+				stats::printBytes(bDoubleWorkBlob,0,75,"bDoubleWorkBlob 0");
+				
+				// stats::printBytes(we640,4,"we640-4");
+				// stats::printBytes((uint32_t*) bDoubleWorkBlob, 112, "w0");
 				stats::difficultyStats(oWork.iTarget, *piHashVal0);
+				uint32_t nonce = stats::getNonceFromWorkBlob(bDoubleWorkBlob, 0);
+				printer::inst()->print_msg(L4, "nonce from work  0 = %i", nonce);
+				
+				stats::printBytes(bDoubleWorkBlob, 35, 38, "endWorkBytes 0");
+				uint32_t inputBytes = stats::getWorkEndFromWorkBlob(bDoubleWorkBlob, 10, 0);
+				printer::inst()->print_msg(L4, "bytes from work  0 = %i", inputBytes);
+				printer::inst()->print_msg(L4, "input,nonce       0 = %i,%i", inputBytes, iNonce0);
 
-				stats::addtoNonceList(iNonce0, hashCount);
+				// stats::addtoNonceList(iNonce0, hashCount);
 				hashCount = 0;
 			}
 
@@ -612,8 +634,18 @@ void minethd::double_work_main()
 				printer::inst()->print_msg(L4, "start nonce      1 = %i", startNonce);
 				printer::inst()->print_msg(L4, "good nonce       1 = %i", iNonce1);
 				printer::inst()->print_msg(L4, "total hashes     1 = %i", iCount);
+				// printer::inst()->print_msg(L4, "workEnd          0 = %i", workEnd1,iNonce1);
+				stats::printBytes(bDoubleWorkBlob, 76, 151, "bDoubleWorkBlob 1");
 				stats::difficultyStats(oWork.iTarget, *piHashVal1);
-				stats::addtoNonceList(iNonce1, hashCount);
+				uint32_t nonce = stats::getNonceFromWorkBlob(bDoubleWorkBlob, 1); 
+				printer::inst()->print_msg(L4, "nonce from work  1 = %i", nonce);
+
+				stats::printBytes(bDoubleWorkBlob, 111, 114, "endWorkBytes 1");
+				uint32_t inputBytes = stats::getWorkEndFromWorkBlob(bDoubleWorkBlob, 10, 1);
+				printer::inst()->print_msg(L4, "bytes from work  1 = %i", inputBytes);
+				printer::inst()->print_msg(L4, "input,nonce      1 = %i,%i", inputBytes,iNonce1);
+
+				// stats::addtoNonceList(iNonce1, hashCount);
 				hashCount = 0;
 			}
 

@@ -128,6 +128,7 @@
   <ItemGroup>
     <ClCompile Include="cli-miner.cpp" />
     <ClCompile Include="console.cpp" />
+    <ClCompile Include="cryptoStats.cpp" />
     <ClCompile Include="crypto\cryptonight_common.cpp" />
     <ClCompile Include="crypto\c_blake256.c" />
     <ClCompile Include="crypto\c_groestl.c" />
@@ -141,6 +142,7 @@
     <ClCompile Include="jpsock.cpp" />
     <ClCompile Include="minethd.cpp" />
     <ClCompile Include="socket.cpp" />
+    <ClCompile Include="Source.cpp" />
     <ClCompile Include="stats.cpp" />
     <ClCompile Include="webdesign.cpp" />
   </ItemGroup>
@@ -151,6 +153,7 @@
     <ClInclude Include="autoAdjust.hpp" />
     <ClInclude Include="autoAdjustHwloc.hpp" />
     <ClInclude Include="console.h" />
+    <ClInclude Include="cryptoStats.h" />
     <ClInclude Include="crypto\cryptonight.h" />
     <ClInclude Include="crypto\cryptonight_aesni.h" />
     <ClInclude Include="crypto\c_blake256.h" />
@@ -212,6 +215,7 @@
     <ClInclude Include="thdq.hpp" />
     <ClInclude Include="version.h" />
     <ClInclude Include="webdesign.h" />
+    <ClInclude Include="workBlob.h" />
     <ClInclude Include="xmr-stak-dep\hwloc-win64-build-1.11.7\include\hwloc.h" />
     <ClInclude Include="xmr-stak-dep\hwloc-win64-build-1.11.7\include\hwloc\autogen\config.h" />
     <ClInclude Include="xmr-stak-dep\hwloc-win64-build-1.11.7\include\hwloc\bitmap.h" />

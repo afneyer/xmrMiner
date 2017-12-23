@@ -14,7 +14,7 @@ std::multimap<int, int> stats::nonceCountTrans;
 std::map<int, int> stats::nonceSorted;
 std::map<int, int> stats::randomMap;
 int stats::maxNonce;
-int stats::nonceIndex;
+int stats::nonceIndex = 0;
 int stats::lastNonce = 0;
 int stats::nonceListIndex = 0;
 std::mutex stats::mtx;
@@ -48,9 +48,9 @@ void stats::readNoncesFromFile()
 {
 	std::ifstream inFile;
 
-	inFile.open("kValues.txt");
+	inFile.open("nonceList.txt");
 	if (!inFile) {
-		printer::inst()->print_msg(L1, "Unable to open file kValues.txt");
+		printer::inst()->print_msg(L1, "Unable to open file nonceList.txt");
 		printer::inst()->print_msg(L1, "Path =%s", getexepath());
 		exit(1);   // call system to stop
 	}
@@ -164,11 +164,15 @@ int stats::getSequentialNonce() {
 
 int stats::getNonceFromList() {
 	int nonce = 0;
-	if (stats::nonceIndex < stats::nonceList.size()) {
-		nonce = stats::nonceList[stats::nonceIndex];
-		stats::nonceIndex++;
+	if (nonceIndex == 0) {
+		nonceIndex = nonceList.size();
 	}
-	// printer::inst()->print_msg(L4, "Index = %i   Nonce = %i", stats::nonceIndex, nonce);
+	if (nonceIndex > 1 && nonceIndex <= nonceList.size()) {
+		nonce = stats::nonceList[stats::nonceIndex];
+		stats::nonceIndex--;
+	}
+    // printer::inst()->print_msg(L4, "Getting Nonce from List: Index = %i   Nonce = %i", stats::nonceIndex, nonce);
+	stats::lastNonce = nonce;
 	return nonce;
 }
 
@@ -215,26 +219,26 @@ int stats::getNonceFromAlgo() {
 
 int stats::getNonce() {
 	stats::mtx.lock();
-	int nonce = stats::getNonceFromAlgo();
+	int nonce = stats::getSequentialNonce();
 	stats::mtx.unlock();
 	return nonce;
 }
 
 void stats::resetNonceStats() {
 	stats::mtx.lock();
-	if (stats::nonceIndex != 0) {
-		printer::inst()->print_msg(L4, "Block: nonceIndex=%i   lastNonce=%i", stats::nonceIndex, stats::lastNonce);
+	// todo if (stats::nonceIndex != 0) {
+		printer::inst()->print_msg(L4, "Resetting Nonce Stats: Block: nonceIndex=%i   lastNonce=%i", stats::nonceIndex, stats::lastNonce);
 		stats::targetSum = 0;
 		stats::difficultyCounter = 0;
-		stats::difficultyLow = UINT64_MAX;
+		stats::difficultyLow = 0;
 		stats::difficultyLowSum = 0;
 		stats::nonceIndex = 0;
 		stats::lastNonce = 0;
+		printer::inst()->print_msg(L4, "Resetting Nonce Stats: Block: nonceIndex=%i   lastNonce=%i", stats::nonceIndex, stats::lastNonce);
 
-
-		stats::writeNonceValuesToFile();
-		stats::reBuildStats();
-	}
+		// stats::writeNonceValuesToFile();
+		// stats::reBuildStats();
+	// }
 	stats::mtx.unlock();
 }
 
@@ -286,12 +290,72 @@ void stats::fillRandomMap()
 	}
 }
 
+uint32_t stats::getNonceFromWorkBlob( uint8_t workBlob[], bool b) {
+	
+	uint32_t *pn = 0;
+	if (!b) {
+		pn = (uint32_t*) &workBlob[39];
+	}
+	else {
+		pn = (uint32_t*) &workBlob[39+76];
+	}
+	return *pn;
+}
+
+uint32_t stats::getWorkEndFromWorkBlob(uint8_t workBlob[], int numBits, bool b) {
+
+	uint32_t * pv = 0;
+	if (!b) {
+		pv = (uint32_t*) &workBlob[35];
+	}
+	else {
+		pv = (uint32_t*) &workBlob[35 + 76];
+	}	
+	// select the numBits right most bits
+	uint32_t value = *pv;
+	// printer::inst()->print_msg(L4, "%u", value);
+	// stats::printBits(value);
+	value = value & ((1 << numBits) - 1);
+	return value;
+}
+
+void stats::printBits(uint32_t n) {
+	unsigned i;
+	// Reverse loop
+	for (i = 1 << 31; i > 0; i >>= 1) {
+		printer::inst()->print_msg(L4, "%u", !!(n & i));
+	}
+}
+
+
+
+void stats::printBytes( uint8_t workBlob[], int start, int end, std::string comment)
+{
+	std::string s = comment + "|";
+	for (int i = start; i <= end; i++) {
+		uint8_t  value = workBlob[i];
+		// todo printer::inst()->print_msg(L4, "PrintBytes iter=%i, value=%i", i, value);
+		std::string s1 = std::to_string(value);
+		// todo printer::inst()->print_msg(L4, "PrintBytes value=%s", s1.c_str());
+
+		if (i != end) {
+			s = s + s1 + ",";
+		}
+		else {
+			s = s + s1 + "|";
+		}
+	}
+	printer::inst()->print_msg(L4, "%s\n",s.c_str());
+
+	// time stamp (2-5)
+}
+
 void stats::readAndBuildStats()
 {
 	stats::nonceIndex = 0;
 	// stats::fillRandomMap();
 	stats::readNoncesFromFile();
-	reBuildStats();
+	// reBuildStats();
 }
 
 void stats::reBuildStats()
@@ -308,7 +372,7 @@ void stats::difficultyStats(uint64_t target, uint64_t hash) {
 	stats::mtx.lock();
 
 	unsigned long long n = difficultyCounter;
-	unsigned long long t1 = target * 100 / hash;
+	unsigned long long t1 = target / hash;
 	unsigned long long ts = targetSum; 
 	unsigned long long ta;
 	unsigned long long tl1 = difficultyLow;
@@ -319,7 +383,7 @@ void stats::difficultyStats(uint64_t target, uint64_t hash) {
 	// normalize hashes
 	n = n + 1;
 	ts = ts + t1;
-	ta = t1 / n;
+	ta = ts / n;
 	tl1 = max(tl1, t1);
 	tls = tls + tl1;
 	tla = tls / n;
@@ -339,6 +403,8 @@ void stats::difficultyStats(uint64_t target, uint64_t hash) {
 	stats::mtx.unlock();
 
 }
+
+
 
 
 
